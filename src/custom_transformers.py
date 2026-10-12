@@ -3,13 +3,13 @@ from sklearn.compose import make_column_selector
 import pandas as pd
 import os
 import pyreadstat
-import numpy as np 
+import numpy as np
 from sklearn.model_selection import train_test_split
 
 class LoadData(BaseEstimator, TransformerMixin):
     def __init__(self, path):
         self.path = path
-        
+
 
     def fit(self, X, y=None):
         return self
@@ -21,8 +21,8 @@ class LoadData(BaseEstimator, TransformerMixin):
             return df
         else:
             raise ValueError(f"Unsupported file extension: {extension}")
-       
-        
+
+
 
 
 
@@ -53,7 +53,7 @@ class FilterByValueTransformer(BaseEstimator, TransformerMixin):
         else:
             return X[mask]
 
-        
+
 
 class DropNaNValueTransformer(BaseEstimator, TransformerMixin):
     def __init__(self, column=None):
@@ -73,8 +73,8 @@ class DropNaNValueTransformer(BaseEstimator, TransformerMixin):
         if y is not None:
             return X[mask], y[mask]
         else:
-            return X[mask]    
-        
+            return X[mask]
+
 class FeatureSelector(BaseEstimator, TransformerMixin):
     def __init__(self, method, include=None, exclude=None, query=None):
         self.method = method
@@ -88,21 +88,21 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):
         if self.method == 'dtype':
             return X.select_dtypes(include=self.include, exclude=self.exclude)
-        
+
         elif self.method == 'substring':
             selected_cols = [col for col in X.columns if any(sub in col for sub in self.query)]
             return X[selected_cols]
 
         elif self.method == 'exact':
             return X[self.query]
-        
+
         else:
-            raise ValueError(f"Invalid method: {self.method}")   
-        
+            raise ValueError(f"Invalid method: {self.method}")
+
 class DropColumns(BaseEstimator, TransformerMixin):
     def __init__(self, columns):
         self.columns = columns
-        
+
 
     def fit(self, X, y=None):
         return self
@@ -112,7 +112,7 @@ class DropColumns(BaseEstimator, TransformerMixin):
             return X
         else:
             return X.drop(columns=self.columns)
-            
+
 
 class ColumnSelector(BaseEstimator, TransformerMixin):
     def __init__(self, method, include=None, exclude=None, query=None):
@@ -127,19 +127,19 @@ class ColumnSelector(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):
         if self.method == 'dtype':
             return X.select_dtypes(include=self.include, exclude=self.exclude)
-        
+
         elif self.method == 'substring':
             selected_cols = [col for col in X.columns if any(sub in col for sub in self.query)]
             return X[selected_cols]
 
         elif self.method == 'exact':
             return X[self.query]
-        
+
         else:
             raise ValueError(f"Invalid method: {self.method}")
 
-        
-        
+
+
 
 # Custom Pipeline
 class CustomPipeline:
@@ -160,16 +160,16 @@ class CustomPipeline:
     def fit_transform(self, X, y):
         self.fit(X, y)
         return self.transform(X, y)
-    
-    
-    
+
+
+
 import os
 import pyreadstat
 
-class RawDataTransformations (BaseEstimator, TransformerMixin):	
+class RawDataTransformations (BaseEstimator, TransformerMixin):
     def __init__(self, path):
         self.path = path
-    
+
     def load_data(self, df=None, **kwargs):
         extension = os.path.splitext(self.path)[1].lower()
         if extension == '.sav':
@@ -179,11 +179,11 @@ class RawDataTransformations (BaseEstimator, TransformerMixin):
         else:
             raise ValueError(f'Unsupported file extension: {extension}')
         return df
-    
+
     def dropna_on_target(self, df, columns):
         return df.dropna(subset=[columns])
-    
-    
+
+
     def filter_df (self, df, column, value, operator='>='):
         if operator == '>=':
             mask = df[column] >= value
@@ -196,8 +196,8 @@ class RawDataTransformations (BaseEstimator, TransformerMixin):
         else:
             raise ValueError(f"Invalid operator: {operator}")
         return df[mask]
-    
-    
+
+
     def target_binarization_by_percentile (self, df, column, percentile, operator='>='):
         if operator == '>=':
             df[column] = np.where(df[column] >= np.percentile(df[column], percentile), 1, 0)
@@ -210,33 +210,32 @@ class RawDataTransformations (BaseEstimator, TransformerMixin):
         else:
             raise ValueError(f"Invalid operator: {operator}")
         return df
-    
+
     def split_train_test(self, df, target):
         X, y = df.drop(target, axis=1), df[target]
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-        return X_train, X_test, y_train, y_test 
-    
-    
+        return X_train, X_test, y_train, y_test
+
+
     def feature_selector(self,  df, target , method = 'dtype', include=None, exclude=None, query=None):
         if method == 'dtype':
             return pd.concat([df.select_dtypes(include=include, exclude=exclude), df[target]],axis=1)
-        
+
         elif method == 'substring':
             selected_cols = [col for col in df.columns if any(sub in col for sub in query)]
-        
+
             return pd.concat([df[selected_cols],df[target]],axis=1)
 
         elif method == 'exact':
             return pd.concat([df[query], df[target]], axis=1)
-        
+
         else:
             raise ValueError(f"Invalid method: {method}")
-    
-    
 
-        
-        
-    
-    
-    # Add other transformation methods    
 
+
+
+
+
+
+    # Add other transformation methods
